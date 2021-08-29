@@ -35,11 +35,11 @@ The `startServer()` function takes an optional configuration object as well as a
 
 These can also be set using environment variables:
 ```
-	SERVERNAME
-	HTTPS
-	PORT
-	SERVERADDRESS
-	PINGSECONDS
+SERVERNAME
+HTTPS
+PORT
+SERVERADDRESS
+PINGSECONDS
 ```
 
 The websocket message callback function is called when a websocket message is recieved in the form `function(ws, dta)` where `ws` is a reference to the open websocket and `dta` is the message recieved. `dta` will be converted to an Object if it is valid JSON; otherwise, it will be a string.
