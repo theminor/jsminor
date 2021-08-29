@@ -25,11 +25,11 @@ startServer(null, (msg, ws) => {
 The `startServer()` function takes an optional configuration object as well as a callback function that is called upon recieving a websocket message. The config object holds the folowing options (with default values specified below):
 ```
 {
-    serverName: "LocalServer",
-    https: false,
-    serverPort: 12345,
-    serverAddress: "localhost",
-    pingInterval: 10
+	serverName: "LocalServer",
+	https: false,
+	serverPort: 12345,
+	serverAddress: "localhost",
+	pingInterval: 10
 }
 ```
 
