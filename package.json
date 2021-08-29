@@ -1,8 +1,9 @@
 {
 	"name": "jsminor",
 	"version": "0.0.1",
+	"type": "module",
 	"description": "Minimal server framework",
-	"main": "jsminor.js",
+	"main": "jsminor.mjs",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
