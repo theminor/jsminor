@@ -49,7 +49,7 @@ The websocket message callback function is called when a websocket message is re
 
 Files served under the `static` directory will be served to clients when requested.
 
-To utalize websockets, open a new websocket with, for example:
+To utilize websockets, open a new websocket with, for example:
 
 ```
 const skt = new WebSocket(window.location.href.replace('http://', 'ws://').replace('https://', 'wss://'));
