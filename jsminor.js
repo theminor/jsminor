@@ -25,7 +25,7 @@ function logMsg(errOrMsg, level, logStack, ws) {
 	if (typeof errOrMsg === 'string' && level === 'error') errOrMsg = new Error(errOrMsg);
 	console[level]('[' + new Date().toLocaleString() + '] ' + color[level] + (errOrMsg ? errOrMsg.toString() : '') + color.reset);   // '\x1b[0m' = reset
 	if (logStack && errOrMsg.stack && (errOrMsg.stack.trim() !== '')) console[level](errOrMsg.stack);
-	if (ws) wsSend(ws, '[' + new Date().toLocaleString() + '] ' + (errOrMsg ? errOrMsg.toString() : '');
+	if (ws) wsSend(ws, '[' + new Date().toLocaleString() + '] ' + (errOrMsg ? errOrMsg.toString() : ''));
 }
 
 /**
@@ -36,10 +36,10 @@ function logMsg(errOrMsg, level, logStack, ws) {
 function wsSend(ws, dta) {
 	if (ws && ws.readyState === WebSocket.OPEN) {
 		ws.send(
-			if (!(typeof dta === "string" || dta instanceof String)) JSON.stringify(dta),
+			(typeof dta === "string" || dta instanceof String) ? dta : JSON.stringify(dta),
 			err => err ? logMsg(err) : false
 		);
-	}; else {
+	} else {
 		logMsg(`Websocket not ready for message "${dta}"`, 'error');
 		return false;
 	}
@@ -67,11 +67,11 @@ function fileToContentType(fileName) {
 /**
  * Entry Point
  */
-let server.filesCache = {}; // cache of static files
+ const server = http.createServer();
+ server.filesCache = {}; // cache of static files
 for (let file in fs.readdirSync('./static/')) {
 	server.filesCache[file] = fs.readFileSync('./static/' + file);
 }
-const server = http.createServer();
 server.on('request', (request, response) => {
 	try {
 		let fileName = path.basename(request.url);
