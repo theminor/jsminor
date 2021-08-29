@@ -1,6 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const WebSocket = require('ws');
+import fs from 'fs';
+import path from 'path';
+import http from 'http';
+import https from 'https';
+import WebSocket from 'ws'; 
 
 /**
  * Log a message, optionally as an error
@@ -60,9 +62,8 @@ function fileToContentType(fileName) {
  * @param {function(string, Object)} [onWebsocketMessage] - a callback function called when a message is received on the websocket, i.e. func(msg, ws)
  * @returns {Object} the server object
  */
-export default function startServer(config, onWebsocketMessage) {
-	serverName = config.serverName || process.env.serverName || 'LocalServer';
-	http = (config.https || process.env.HTTPS) ? require('https') : require('http');
+export function startServer(config, onWebsocketMessage) {
+	if (config.https || process.env.HTTPS) http = https;
 	serverPort = config.serverPort || process.env.PORT || 12345;
 	serverAddress = config.serverAddress || process.env.serverAddress || 'localhost';
 	pingInterval = config.pingInterval || ((process.env.PINGSECONDS || 10) * 1000);
