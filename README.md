@@ -36,9 +36,9 @@ The `startServer()` function takes an optional configuration object as well as a
 These can also be set using environment variables:
 ```
 	SERVERNAME
-    HTTPS
-    PORT
-    SERVERADDRESS
+	HTTPS
+	PORT
+	SERVERADDRESS
 	PINGSECONDS
 ```
 
