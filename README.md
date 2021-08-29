@@ -64,7 +64,7 @@ Then use `skt.onmessage` to specify a callback function to recieve messages, and
 	<script defer>
 		const skt = new WebSocket(window.location.href.replace('http://', 'ws://').replace('https://', 'wss://'));
 		skt.onmessage = function(event) {
-            document.getElementById('status').innerText = 'Last Message: ' + event.data;
+			document.getElementById('status').innerText = 'Last Message: ' + event.data;
 		}
 		function sendBtnClick() {
 			skt.send(document.getElementById('inpt').value);
