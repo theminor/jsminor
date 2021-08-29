@@ -1,4 +1,5 @@
 # jsminor
 
-Minimal server framework.
-Under construction.
+Minimal framework to serve static webpages and open a websocket with clients.
+
+See `example.js` and `static/example.html` for example usages

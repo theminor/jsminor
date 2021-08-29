@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import http from 'http';
 import https from 'https';
-import WebSocket from 'ws'; 
+import WebSocket, { WebSocketServer } from 'ws';
 
 /**
  * Log a message, optionally as an error
@@ -43,16 +43,17 @@ export function wsSend(ws, dta) {
  * @returns {Object} the head object in the form {"Content-Type": "text/plain"} 
  */
 function fileToContentType(fileName) {
-	let cType = 'text/' + (path.extname(fileName) || 'text/plain'); // covers text/html, text/css, text/csv, text/xml, etc.
-	if (path.extname(fileName) === 'js') cType = 'application/javascript';
-	else if (path.extname(fileName) === 'txt') cType = 'text/plain';
-	else if (path.extname(fileName) === 'gif') cType = 'image/gif';
-	else if (path.extname(fileName) === 'jpg' || path.extname(fileName) === 'jpeg') cType = 'image/jpeg';
-	else if (path.extname(fileName) === 'png') cType = 'image/png';
-	else if (path.extname(fileName) === 'pdf') cType = 'application/pdf';
-	else if (path.extname(fileName) === 'zip') cType = 'application/zip';
-	else if (path.extname(fileName) === 'mp3') cType = 'audio/mpeg';
-	else if (path.extname(fileName) === 'wav') cType = 'audio/x-wav';
+	const ext = path.extname(fileName).toLowerCase().slice(1);
+	let cType = 'text/' + (ext || 'plain'); // covers text/html, text/css, text/csv, text/xml, etc.
+	if (ext === 'js') cType = 'application/javascript';
+	else if (ext === 'txt') cType = 'text/plain';
+	else if (ext === 'gif') cType = 'image/gif';
+	else if (ext === 'jpg' || ext === 'jpeg') cType = 'image/jpeg';
+	else if (ext === 'png') cType = 'image/png';
+	else if (ext === 'pdf') cType = 'application/pdf';
+	else if (ext === 'zip') cType = 'application/zip';
+	else if (ext === 'mp3') cType = 'audio/mpeg';
+	else if (ext === 'wav') cType = 'audio/x-wav';
 	return { "Content-Type": cType };
 }
 
@@ -63,14 +64,15 @@ function fileToContentType(fileName) {
  * @returns {Object} the server object
  */
 export function startServer(config, onWebsocketMessage) {
-	if (config.https || process.env.HTTPS) http = https;
-	serverPort = config.serverPort || process.env.PORT || 12345;
-	serverAddress = config.serverAddress || process.env.serverAddress || 'localhost';
-	pingInterval = config.pingInterval || ((process.env.PINGSECONDS || 10) * 1000);
+	const serverName = config?.serverName || process.env.SERVERNAME || 'LocalServer';
+	if (config?.https || process.env.HTTPS) http = https;
+	const serverPort = config?.serverPort || process.env.PORT || 12345;
+	const serverAddress = config?.serverAddress || process.env.serverAddress || 'localhost';
+	const pingInterval = config?.pingInterval || ((process.env.PINGSECONDS || 10) * 1000);
 
 	const server = http.createServer();
 	server.filesCache = {}; // cache of static files
-	for (let file in fs.readdirSync('./static/')) {
+	for (const file of fs.readdirSync('./static/')) {
 		server.filesCache[file] = fs.readFileSync('./static/' + file);
 	}
 	server.on('request', (request, response) => {
@@ -90,7 +92,7 @@ export function startServer(config, onWebsocketMessage) {
 	server.listen(serverPort, err => {
 		if (err) return logMsg(err);
 		else {
-			const wss = new WebSocket.Server({server});
+			const wss = new WebSocketServer({server});
 			wss.on('connection', ws => {
 				function closeWs(ws, err) {
 					if (err && !err.message.includes('CLOSED')) logMsg(err);
