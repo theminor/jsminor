@@ -67,7 +67,7 @@ export function startServer(config, onWebsocketMessage) {
 	const serverName = config?.serverName || process.env.SERVERNAME || 'LocalServer';
 	if (config?.https || process.env.HTTPS) http = https;
 	const serverPort = config?.serverPort || process.env.PORT || 12345;
-	const serverAddress = config?.serverAddress || process.env.serverAddress || 'localhost';
+	const serverAddress = config?.serverAddress || process.env.SERVERADDRESS || 'localhost';
 	const pingInterval = config?.pingInterval || ((process.env.PINGSECONDS || 10) * 1000);
 
 	const server = http.createServer();
