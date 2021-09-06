@@ -29,7 +29,7 @@ The `startServer()` function takes an optional configuration object as well as a
 	https: false,
 	serverPort: 12345,
 	serverAddress: "localhost",
-	pingInterval: 10
+	pingSecs: 10
 }
 ```
 

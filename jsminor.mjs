@@ -59,7 +59,7 @@ function fileToContentType(fileName) {
 
 /**
  * Start a server and open a websocket
- * @param {Object} [config] - the server configuration in the form {serverName: "LocalServer", https: false, serverPort: 12345, serverAddress: "localhost", pingInterval: 10}
+ * @param {Object} [config] - the server configuration in the form {serverName: "LocalServer", https: false, serverPort: 12345, serverAddress: "localhost", pingSecs: 10}
  * @param {function(string, Object)} [onWebsocketMessage] - a callback function called when a message is received on the websocket, i.e. func(msg, ws)
  * @returns {Object} the server object
  */
@@ -68,7 +68,7 @@ export function startServer(config, onWebsocketMessage) {
 	if (config?.https || process.env.HTTPS) http = https;
 	const serverPort = config?.serverPort || process.env.PORT || 12345;
 	const serverAddress = config?.serverAddress || process.env.SERVERADDRESS || 'localhost';
-	const pingInterval = config?.pingInterval || ((process.env.PINGSECONDS || 10) * 1000);
+	const pingInterval = (config?.pingSecs || process.env.PINGSECONDS || 10) * 1000;
 
 	const server = http.createServer();
 	server.filesCache = {}; // cache of static files
