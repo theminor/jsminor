@@ -20,6 +20,71 @@ export function logMsg(errOrMsg, level, logStack, ws) {
 	if (ws) wsSend(ws, '[' + new Date().toLocaleString() + '] ' + (errOrMsg ? errOrMsg.toString() : ''));
 }
 
+
+/**
+ * Perform an API Request from a supplied API Object
+ * @param {Object} apiObject - the API Object in the form {baseUrl: 'https://api.example.com'} -- this Object also stores settings, the auth token, etc.
+ * @param {String} path - the path to the API endpoint for this request -- for example "/v1/contacts" 
+ * @param {String} [method="GET"] - the HTTP method to use, e.g. 'GET', 'POST', 'PUT', 'DELETE' -- defaults to 'GET' unless data is supplied, in which case it defaults to 'POST'
+ * @param {string} [data] - the data to submit with the request (for example POST data)
+ * @param {Object} [headers] - the headers object to send with the request -- see the nodejs https.request documentation for more details
+ * @returns {Promise<Object>} Resolves to the Response to the API request, in the form {headers: {...}, statusCode: 200, statusMessage: "OK", method: "GET", dta: {...}} -- dta will be converted into a javascript object (or a string, if not JSON data, or null if it failed)
+ */
+ function apiRequest(apiObject, path, method, data, headers) { return new Promise((resolve, reject) => {
+	let options = { "method": (method || (data ? 'POST' : 'GET')) };
+	if (headers) options.headers = headers;
+	if (apiObject.auth) options.auth = apiObject.auth;
+	let htp = http;
+	if (apiObject.baseUrl.startsWith('https')) htp = https;
+	const req = htp.request(apiObject.baseUrl + path, options, res => {
+		let resDta = {dta: ''};
+		if (res.statusCode && (res.statusCode >= 300)) reject(`API ${options.method} request to ${apiObject.baseUrl + path} - response failed; returned Status Code: ${res.statusCode}`);
+		res.on('error', err => reject(`API ${options.method} request to ${apiObject.baseUrl + path} - response error: ${err}`));
+		res.on('data', d => resDta.dta += d);
+		res.on('end', () => {
+			resDta.headers = res.headers;
+			resDta.statusCode = res.statusCode;
+			resDta.statusMessage = res.statusMessage;
+			resDta.method = res.method;
+			resDta.url = res.url;
+			try {
+				resDta.dta = JSON.parse(resDta.dta);
+			} catch (err) { }
+			resolve(resDta);
+		});
+	});
+	req.on('error', err => reject(`API ${options.method} request to ${apiObject.baseUrl + path} - response error: ${err}`));
+	if (data) req.write(data);
+	req.end();
+}); }
+
+
+/**
+ * Attempt to obtain an Authentication Token from an API
+ * @param {Object} apiObject - the API Object in the form {baseUrl: 'https://api.example.com', authPath: '/api/v1/auth', tokenPath: '/oauth2/token', tokenPostData: 'grant_type=password&username=userName&password=12345'} -- this Object also stores settings, the auth token, etc.
+ * @returns {Object} the apiObject, which includes the authentication Token as {accessToken: "tokenString"}
+ */
+ async function getToken() {
+	try {
+		const resp = await apiRequest(apiObject.authPath, 'POST', tokenPostData);
+		apiObject.token = resp.dta;
+		return apiObject.token;
+	}
+	catch (err) {
+		logMsg(`Problem getting Authentication Token from ${apiObject.baseUrl + apiObject.authPath}: ${err}`);
+		return null;
+	}
+}
+
+
+
+//*** TO DO */
+
+
+
+
+
+
 /**
  * Send a data on the given websocket
  * @param {Object} [ws] - the websocket object. If not specified, nothing is sent
