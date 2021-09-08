@@ -24,17 +24,17 @@ export function logMsg(errOrMsg, level, logStack, ws) {
 /**
  * @typedef {Object} ApiData
  * @property {string} baseUrl - the root url of the api (i.e. "https://api.example.com")
- * @property {string} authTokenPath - the url path to exchange a code or password for an access token, excluding the baseUrl (i.e. "/oauth2/token")
- * @property {string} authGrantType - the grant type to use to obtain an access token (i.e. "authorization_code" or "password")
- * @property {string} authUserName - the username to use when obtaining an access token (typically used only if the access token grant type is "password")
- * @property {string} authSecret - the access code or password to use when obtaining an access token (typically as password if grant type "password"; or an access code if using grant type "authorization_code")
- * @property {string} authContentType - the content type to use when exchanging a code or password for an access token (i.e. "application/json")
- * @property {string} clientID - the client ID to use when obtaining an access token (typically if using grant type "authorization_code")
- * @property {string} clientSecret - the client secret to use when obtaining an access token (typically if using grant type "authorization_code")
- * @property {string} refreshTokenPath - the url path to exchange a refresh token for an access token, excluding the baseUrl (i.e. "/oauth2/token")
- * @property {string} refreshContentType - the content type to use when exchanging a refresh token for an access token (i.e. "application/x-www-form-urlencoded")
- * @property {string} redirectUri - the URI sent to the authentication server to which the user will be redirected upon authentication (i.e. "urn:ietf:wg:oauth:2.0:oob" for the internal redirect uri)
- * @property {Object} token - the access token, typically in the form {access_token: "12345", token_type: "bearer", expires_in: 7200, refresh_token: "12345", "scope": "public"}
+ * @property {string} [authTokenPath] - the url path to exchange a code or password for an access token, excluding the baseUrl (i.e. "/oauth2/token")
+ * @property {string} [authGrantType] - the grant type to use to obtain an access token (i.e. "authorization_code" or "password")
+ * @property {string} [authUserName] - the username to use when obtaining an access token (typically used only if the access token grant type is "password")
+ * @property {string} [authSecret] - the access code or password to use when obtaining an access token (typically as password if grant type "password"; or an access code if using grant type "authorization_code")
+ * @property {string} [authContentType] - the content type to use when exchanging a code or password for an access token (i.e. "application/json")
+ * @property {string} [clientID] - the client ID to use when obtaining an access token (typically if using grant type "authorization_code")
+ * @property {string} [clientSecret] - the client secret to use when obtaining an access token (typically if using grant type "authorization_code")
+ * @property {string} [refreshTokenPath] - the url path to exchange a refresh token for an access token, excluding the baseUrl (i.e. "/oauth2/token")
+ * @property {string} [refreshContentType] - the content type to use when exchanging a refresh token for an access token (i.e. "application/x-www-form-urlencoded")
+ * @property {string} [redirectUri] - the URI sent to the authentication server to which the user will be redirected upon authentication (i.e. "urn:ietf:wg:oauth:2.0:oob" for the internal redirect uri)
+ * @property {Object} [token] - the access token, typically in the form {access_token: "12345", token_type: "bearer", expires_in: 7200, refresh_token: "12345", "scope": "public"}
  */
 
 /**
@@ -107,26 +107,6 @@ export function logMsg(errOrMsg, level, logStack, ws) {
 	catch (err) { logMsg(`Problem obtaining Authentication Token from ${apiData.baseUrl + apiData.authTokenPath}: ${err}.`); }
 	return apiData;
 }
-
-/*
-example flow:
-
-async function postReq(apiData, data) {
-	let reqType = 'GET';
-	let headers = {"Content-Type": 'application/json'};
-	headers['Authorization'] = 'Bearer ' + apiData.token.access_token;
-	let response;
-	try { response = await apiRequest(apiData, '/v1/example', 'POST', JSON.stringify(data), headers); }
-	catch (err) { logMsg('Problem with POST request: ' + err + '. Will try refreshing (or obtaining) Authentication Token...'); }
-	if (!response) {
-		apiData = await getToken(apiData);
-		try { response = await apiRequest(apiData, '/v1/example', 'POST', JSON.stringify(data), headers); }
-		catch (err) { logMsg('Problem with POST request after attempting to get Auth Token: ' + err); }
-	}
-	return response;
-*/
-
-
 
 /**
  * Send a data on the given websocket
