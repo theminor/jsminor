@@ -60,12 +60,29 @@ export function logMsg(errOrMsg, level, logStack, ws) {
 
 
 /**
- * Attempt to obtain an Authentication Token from an API
- * @param {Object} apiObject - the API Object in the form {baseUrl: 'https://api.example.com', authPath: '/api/v1/auth', tokenPath: '/oauth2/token', tokenPostData: 'grant_type=password&username=userName&password=12345'} -- this Object also stores settings, the auth token, etc.
- * @returns {Object} the apiObject, which includes the authentication Token as {accessToken: "tokenString"}
+ * Attempt to refresh an Authentication Token from an API or, if there is no refresh token, obtain a new token
+ * @param {Object} apiObject - the API Object in the form {baseUrl: 'https://api.example.com', authPath: '/api/v1/auth', tokenPath: '/oauth2/token', tokenExchangeContentType: 'application/x-www-form-urlencoded'} -- this Object also stores settings, the auth token, etc.
+ * @returns {Object} the apiObject, which includes the authentication Token as {token: {...}}
  */
  async function getToken() {
+	if (apiObject.token && apiObject.token.refresh_token) {
+		try {
+			let postData;
+			if (apiObject.tokenExchangeContentType === 'application/x-www-form-urlencoded') postData = 'grant_type=refresh_token&refresh_token=' + apiObject.token.refresh_token;
+			else if (apiObject.tokenExchangeContentType === 'application/json') postData = JSON.stringify(apiObject.token);
+			let response = await apiRequest(apiObject, apiObject.tokenPath, 'POST', postData, {'Content-Type': apiObject.tokenExchangeContentType});
+			apiObject.token = response.dta;
+			return apiObject;
+		}
+		catch (err) { logMsg(`Problem refreshing Authentication Token from ${apiObject.baseUrl + apiObject.tokenPath}: ${err}. Attempting to get a new Token...`); }
+	}
 	try {
+
+
+		// *** TO DO ***
+
+
+
 		const resp = await apiRequest(apiObject.authPath, 'POST', tokenPostData);
 		apiObject.token = resp.dta;
 		return apiObject.token;
@@ -76,9 +93,23 @@ export function logMsg(errOrMsg, level, logStack, ws) {
 	}
 }
 
+/*
+ async function refreshToken() {
+	if (settings.api.wealthCounsel.tokenInfo && settings.api.wealthCounsel.tokenInfo.refresh_token) {  // try to refresh first
+		try {
+			let response = await apiRequest('/oauth2/token', 'POST', 'grant_type=refresh_token&refresh_token=' + settings.api.wealthCounsel.tokenInfo.refresh_token, {'Content-Type': 'application/x-www-form-urlencoded'}, settings.api.wealthCounsel.clientId + ':' + settings.api.wealthCounsel.clientSecret);
+			tkn = response.dta;
+		}
+		catch (err) { logMsg('Problem getting Authentication Token from WealthCounsel: ' + err + '. Attempting to get a new Token...'); }
+	}
+	if (!tkn) tkn = await getToken();  // no refresh token. Try to get a new token instead
+	if (tkn) settings.api.wealthCounsel.tokenInfo = tkn; else logMsg('Unable to refresh or obtain new Authentication Token.', 'error');
+	return settings.api.wealthCounsel.tokenInfo;
+}
+*/
 
 
-//*** TO DO */
+
 
 
 
