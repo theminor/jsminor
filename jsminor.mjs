@@ -22,24 +22,41 @@ export function logMsg(errOrMsg, level, logStack, ws) {
 
 
 /**
+ * @typedef {Object} ApiData
+ * @property {string} baseUrl - the root url of the api (i.e. "https://api.example.com")
+ * @property {string} authTokenPath - the url path to exchange a code or password for an access token, excluding the baseUrl (i.e. "/oauth2/token")
+ * @property {string} authGrantType - the grant type to use to obtain an access token (i.e. "authorization_code" or "password")
+ * @property {string} authUserName - the username to use when obtaining an access token (typically used only if the access token grant type is "password")
+ * @property {string} authSecret - the access code or password to use when obtaining an access token (typically as password if grant type "password"; or an access code if using grant type "authorization_code")
+ * @property {string} authContentType - the content type to use when exchanging a code or password for an access token (i.e. "application/json")
+ * @property {string} clientID - the client ID to use when obtaining an access token (typically if using grant type "authorization_code")
+ * @property {string} clientSecret - the client secret to use when obtaining an access token (typically if using grant type "authorization_code")
+ * @property {string} refreshTokenPath - the url path to exchange a refresh token for an access token, excluding the baseUrl (i.e. "/oauth2/token")
+ * @property {string} refreshContentType - the content type to use when exchanging a refresh token for an access token (i.e. "application/x-www-form-urlencoded")
+ * @property {string} redirectUri - the URI sent to the authentication server to which the user will be redirected upon authentication (i.e. "urn:ietf:wg:oauth:2.0:oob" for the internal redirect uri)
+ * @property {Object} token - the access token, typically in the form {access_token: "12345", token_type: "bearer", expires_in: 7200, refresh_token: "12345", "scope": "public"}
+ */
+
+/**
  * Perform an API Request from a supplied API Object
- * @param {Object} apiObject - the API Object in the form {baseUrl: 'https://api.example.com'} -- this Object also stores settings, the auth token, etc.
- * @param {String} path - the path to the API endpoint for this request -- for example "/v1/contacts" 
- * @param {String} [method="GET"] - the HTTP method to use, e.g. 'GET', 'POST', 'PUT', 'DELETE' -- defaults to 'GET' unless data is supplied, in which case it defaults to 'POST'
+ * @param {ApiData} apiData - the apiData Object containing data from this API
+ * @param {string} path - the path to the API endpoint for this request -- for example "/v1/contacts" 
+ * @param {string} [method="GET"] - the HTTP method to use, e.g. 'GET', 'POST', 'PUT', 'DELETE' -- defaults to 'GET' unless data is supplied, in which case it defaults to 'POST'
  * @param {string} [data] - the data to submit with the request (for example POST data)
  * @param {Object} [headers] - the headers object to send with the request -- see the nodejs https.request documentation for more details
+ * @param {string} [auth] - data to compute a basic Authorization header (i.e. "user:password")
  * @returns {Promise<Object>} Resolves to the Response to the API request, in the form {headers: {...}, statusCode: 200, statusMessage: "OK", method: "GET", dta: {...}} -- dta will be converted into a javascript object (or a string, if not JSON data, or null if it failed)
  */
- function apiRequest(apiObject, path, method, data, headers) { return new Promise((resolve, reject) => {
+ function apiRequest(apiData, path, method, data, headers) { return new Promise((resolve, reject) => {
 	let options = { "method": (method || (data ? 'POST' : 'GET')) };
 	if (headers) options.headers = headers;
-	if (apiObject.auth) options.auth = apiObject.auth;
+	if (auth) options.auth = auth;
 	let htp = http;
-	if (apiObject.baseUrl.startsWith('https')) htp = https;
-	const req = htp.request(apiObject.baseUrl + path, options, res => {
+	if (apiData.baseUrl.startsWith('https')) htp = https;
+	const req = htp.request(apiData.baseUrl + path, options, res => {
 		let resDta = {dta: ''};
-		if (res.statusCode && (res.statusCode >= 300)) reject(`API ${options.method} request to ${apiObject.baseUrl + path} - response failed; returned Status Code: ${res.statusCode}`);
-		res.on('error', err => reject(`API ${options.method} request to ${apiObject.baseUrl + path} - response error: ${err}`));
+		if (res.statusCode && (res.statusCode >= 300)) reject(`API ${options.method} request to ${apiData.baseUrl + path} - response failed; returned Status Code: ${res.statusCode}`);
+		res.on('error', err => reject(`API ${options.method} request to ${apiData.baseUrl + path} - response error: ${err}`));
 		res.on('data', d => resDta.dta += d);
 		res.on('end', () => {
 			resDta.headers = res.headers;
@@ -53,66 +70,61 @@ export function logMsg(errOrMsg, level, logStack, ws) {
 			resolve(resDta);
 		});
 	});
-	req.on('error', err => reject(`API ${options.method} request to ${apiObject.baseUrl + path} - response error: ${err}`));
+	req.on('error', err => reject(`API ${options.method} request to ${apiData.baseUrl + path} - response error: ${err}`));
 	if (data) req.write(data);
 	req.end();
 }); }
 
-
 /**
  * Attempt to refresh an Authentication Token from an API or, if there is no refresh token, obtain a new token
- * @param {Object} apiObject - the API Object in the form {baseUrl: 'https://api.example.com', authPath: '/api/v1/auth', tokenPath: '/oauth2/token', tokenExchangeContentType: 'application/x-www-form-urlencoded'} -- this Object also stores settings, the auth token, etc.
- * @returns {Object} the apiObject, which includes the authentication Token as {token: {...}}
+ * @param {ApiData} apiData - the apiData Object containing data from this API
+ * @returns {ApiData} the apiData, which includes the newly obtained authentication Token as {token: {...}}
  */
- async function getToken() {
-	if (apiObject.token && apiObject.token.refresh_token) {
+ async function getToken(ApiData) {
+	if (apiData.token && apiData.token.refresh_token) {
 		try {
-			let postData;
-			if (apiObject.tokenExchangeContentType === 'application/x-www-form-urlencoded') postData = 'grant_type=refresh_token&refresh_token=' + apiObject.token.refresh_token;
-			else if (apiObject.tokenExchangeContentType === 'application/json') postData = JSON.stringify(apiObject.token);
-			let response = await apiRequest(apiObject, apiObject.tokenPath, 'POST', postData, {'Content-Type': apiObject.tokenExchangeContentType});
-			apiObject.token = response.dta;
-			return apiObject;
+			let rfshPostData;
+			if (apiData.refreshContentType === 'application/x-www-form-urlencoded') rfshPostData = `grant_type=refresh_token&refresh_token=${apiData.token.refresh_token}&client_id=${apiData.clientID}&client_secret=${apiData.clientSecret}&redirect_uri=${apiData.redirectUri}`;
+			else if (apiData.refreshContentType === 'application/json') rfshPostData = JSON.stringify({"grant_type": 'refresh_token', "refresh_token": apiData.token.refresh_token, "client_id": apiData.clientID, "client_secret": apiData.clientSecret, "redirect_uri": apiData.redirectUri});
+			let response = await apiRequest(apiData, apiData.refreshTokenPath, 'POST', rfshPostData, {'Content-Type': apiData.refreshContentType});
+			apiData.token = response.dta;
+			return apiData;  // success, so stop here; no need to appy for a new token, below
 		}
-		catch (err) { logMsg(`Problem refreshing Authentication Token from ${apiObject.baseUrl + apiObject.tokenPath}: ${err}. Attempting to get a new Token...`); }
+		catch (err) { logMsg(`Problem refreshing Authentication Token from ${apiData.baseUrl + apiData.refreshTokenPath}: ${err}. Attempting to get a new Token...`); }
 	}
-	try {
-
-
-		// *** TO DO ***
-
-
-
-		const resp = await apiRequest(apiObject.authPath, 'POST', tokenPostData);
-		apiObject.token = resp.dta;
-		return apiObject.token;
+	try {  // no refresh token or there was a problem using the refresh token, so obtain a new token
+		let authPostData;
+		if (apiData.authGrantType === 'password') {
+			if (apiData.authContentType === 'application/x-www-form-urlencoded') authPostData = `grant_type=password&username=${apiData.authUserName}&password=${apiData.authSecret}&redirect_uri=${apiData.redirectUri}`;
+			else if (apiData.authContentType === 'application/json') authPostData = JSON.stringify({"grant_type": 'password', "username": apiData.authUserName, "password": apiData.authSecret, "redirect_uri": apiData.redirectUri});
+		} else if (apiData.authGrantType === 'authorization_code') {
+			if (apiData.authContentType === 'application/x-www-form-urlencoded') authPostData = `grant_type=authorization_code&code=${apiData.authSecret}&client_id=${apiData.clientID}&client_secret=${apiData.clientSecret}&redirect_uri=${apiData.redirectUri}`;
+			else if (apiData.authContentType === 'application/json') authPostData = JSON.stringify({"grant_type": 'authorization_code', "code": apiData.authSecret, "client_id": apiData.clientID, "client_secret": apiData.clientSecret, "redirect_uri": apiData.redirectUri});
+		}
+		let response = await apiRequest(apiData, apiData.authTokenPath, 'POST', authPostData, {'Content-Type': apiData.authContentType});
+		apiData.token = response.dta;
 	}
-	catch (err) {
-		logMsg(`Problem getting Authentication Token from ${apiObject.baseUrl + apiObject.authPath}: ${err}`);
-		return null;
-	}
+	catch (err) { logMsg(`Problem obtaining Authentication Token from ${apiData.baseUrl + apiData.authTokenPath}: ${err}.`); }
+	return apiData;
 }
 
 /*
- async function refreshToken() {
-	if (settings.api.wealthCounsel.tokenInfo && settings.api.wealthCounsel.tokenInfo.refresh_token) {  // try to refresh first
-		try {
-			let response = await apiRequest('/oauth2/token', 'POST', 'grant_type=refresh_token&refresh_token=' + settings.api.wealthCounsel.tokenInfo.refresh_token, {'Content-Type': 'application/x-www-form-urlencoded'}, settings.api.wealthCounsel.clientId + ':' + settings.api.wealthCounsel.clientSecret);
-			tkn = response.dta;
-		}
-		catch (err) { logMsg('Problem getting Authentication Token from WealthCounsel: ' + err + '. Attempting to get a new Token...'); }
+example flow:
+
+async function postReq(apiData, data) {
+	let reqType = 'GET';
+	let headers = {"Content-Type": 'application/json'};
+	headers['Authorization'] = 'Bearer ' + apiData.token.access_token;
+	let response;
+	try { response = await apiRequest(apiData, '/v1/example', 'POST', JSON.stringify(data), headers); }
+	catch (err) { logMsg('Problem with POST request: ' + err + '. Will try refreshing (or obtaining) Authentication Token...'); }
+	if (!response) {
+		apiData = await getToken(apiData);
+		try { response = await apiRequest(apiData, '/v1/example', 'POST', JSON.stringify(data), headers); }
+		catch (err) { logMsg('Problem with POST request after attempting to get Auth Token: ' + err); }
 	}
-	if (!tkn) tkn = await getToken();  // no refresh token. Try to get a new token instead
-	if (tkn) settings.api.wealthCounsel.tokenInfo = tkn; else logMsg('Unable to refresh or obtain new Authentication Token.', 'error');
-	return settings.api.wealthCounsel.tokenInfo;
-}
+	return response;
 */
-
-
-
-
-
-
 
 
 
