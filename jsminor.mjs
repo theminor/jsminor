@@ -153,12 +153,12 @@ function fileToContentType(fileName) {
  */
 export function startServer(config, onWebsocketMessage) {
 	const serverName = config?.serverName || process.env.SERVERNAME || 'LocalServer';
-	if (config?.https || process.env.HTTPS) http = https;
+	const htp = (config?.https || process.env.HTTPS) ? https : http;
 	const serverPort = config?.serverPort || process.env.PORT || 12345;
 	const serverAddress = config?.serverAddress || process.env.SERVERADDRESS || 'localhost';
 	const pingInterval = (config?.pingSecs || process.env.PINGSECONDS || 10) * 1000;
 	const staticDir = config?.staticDir || process.env.STATICDIR || './static/';
-	const server = http.createServer();
+	const server = htp.createServer();
 	server.filesCache = {}; // cache of static files
 	for (const file of fs.readdirSync(staticDir)) {
 		server.filesCache[file] = fs.readFileSync(staticDir + file);
@@ -202,7 +202,7 @@ export function startServer(config, onWebsocketMessage) {
 					ws.ping(err => { if (err) return closeWs(ws, err); });
 				}, pingInterval);
 			});
-			logMsg('Server ' + serverName + ' is listening on port ' + serverPort + ' (http' + (process.env.HTTPS ? 's://' : '://') + serverAddress + ':' + serverPort + ')');
+			logMsg(`Server ${serverName} is listening on port ${serverPort} (http${(config?.https || process.env.HTTPS) ? 's' : ''}://${serverAddress}:${serverPort})`);
 		}
 	});
 	return server;
