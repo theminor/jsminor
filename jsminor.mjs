@@ -147,7 +147,7 @@ function fileToContentType(fileName) {
 
 /**
  * Start a server and open a websocket
- * @param {Object} [config] - the server configuration in the form {serverName: "LocalServer", https: false, serverPort: 12345, serverAddress: "localhost", pingSecs: 10}
+ * @param {Object} [config] - the server configuration in the form {serverName: "LocalServer", https: false, serverPort: 12345, serverAddress: "localhost", pingSecs: 10, staticDir: "./static/"}
  * @param {function(string, Object)} [onWebsocketMessage] - a callback function called when a message is received on the websocket, i.e. func(msg, ws)
  * @returns {Object} the server object
  */
@@ -157,11 +157,11 @@ export function startServer(config, onWebsocketMessage) {
 	const serverPort = config?.serverPort || process.env.PORT || 12345;
 	const serverAddress = config?.serverAddress || process.env.SERVERADDRESS || 'localhost';
 	const pingInterval = (config?.pingSecs || process.env.PINGSECONDS || 10) * 1000;
-
+	const staticDir = config?.staticDir || process.env.STATICDIR || './static/';
 	const server = http.createServer();
 	server.filesCache = {}; // cache of static files
-	for (const file of fs.readdirSync('./static/')) {
-		server.filesCache[file] = fs.readFileSync('./static/' + file);
+	for (const file of fs.readdirSync(staticDir)) {
+		server.filesCache[file] = fs.readFileSync(staticDir + file);
 	}
 	server.on('request', (request, response) => {
 		try {

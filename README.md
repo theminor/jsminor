@@ -35,6 +35,7 @@ The optional config object holds the folowing parameters. Alternatively, any one
 * *optional* **number** `serverPort` - the server port. If not supplied, the `PORT` environment variable will be queried. Otherwise, the default port `12345` will be used.
 * *optional* **number** `serverAddress` - the address of the server that can be queried if needed. Note that this port is merely for internal reference and does not affect the actual address. If not supplied, the `SERVERADDRESS` environment variable will be queried. Otherwise, the default address `localhost` will be used.
 * *optional* **number** `pingSecs` - the number of seconds between which to ping clients with open websockets. If not supplied, the `PINGSECONDS` environment variable will be queried. Otherwise, the default value `10` will be used.
+* *optional* **string** `staticDir` - the directory from which to serve static files. If not supplied, the `STATICDIR` environment variable will be queried. Otherwise, the default directory `./static/` will be used.
 
 ### Static Files
 
