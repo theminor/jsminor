@@ -2,7 +2,7 @@
 
 Minimal server framework to serve static webpages and open a websocket with clients.
 
-## Installation and Usage
+## Installation and Basic Usage
 
 To use jsminor, install it with `npm install`, then import the `startServer` module with:
 ```
@@ -24,31 +24,25 @@ startServer(null, (msg, ws) => {
 
 ## Starting a Server
 
-Start a webserver with the `startServer()` function. The `startServer()` function takes an optional configuration object as well as a callback function that is called upon recieving a websocket message. The config object holds the folowing options (with default values specified below):
-```
-{
-	serverName: "LocalServer",
-	https: false,
-	serverPort: 12345,
-	serverAddress: "localhost",
-	pingSecs: 10
-}
-```
+Start a webserver with the `startServer()` function. The `startServer()` function takes an optional configuration object as well as a callback function that is called upon recieving a websocket message (see [Recieving Websocket Messages](### Recieving Websocket Messages on the Server), below).
 
-These can also be set using environment variables:
-```
-SERVERNAME
-HTTPS
-PORT
-SERVERADDRESS
-PINGSECONDS
-```
+### Server Configuration
+
+The optional config object holds the folowing parameters. Alternatively, any one or more of these paramters can be set with the environment variables specified below. If not supplied, each parameter also has a default value, specified below:
+
+* *optional* **string** `serverName` - the name of the server for internal reference purposes only. If not supplied, the `SERVERNAME` environment variable will be queried. Otherwise, the default name `LocalServer` will be used.
+* *optional* **boolean** `https` - if truthy, the Hypertext Transfer Protocol Secure protocol will be used. If not supplied, the `HTTPS` environment variable will be queried. Otherwise, the default protocol `http` will be used.
+* *optional* **number** `serverPort` - the server port. If not supplied, the `PORT` environment variable will be queried. Otherwise, the default port `12345` will be used.
+* *optional* **number** `serverAddress` - the address of the server that can be queried if needed. Note that this port is merely for internal reference and does not affect the actual address. If not supplied, the `SERVERADDRESS` environment variable will be queried. Otherwise, the default address `localhost` will be used.
+* *optional* **number** `pingSecs` - the number of seconds between which to ping clients with open websockets. If not supplied, the `PINGSECONDS` environment variable will be queried. Otherwise, the default value `10` will be used.
+
+### Static Files
 
 Files served under the `static` directory will be served to clients when requested.
 
 ## Using Websockets
 
-### Recieving Websocket messages on the Server 
+### Recieving Websocket Messages on the Server 
 
 The websocket message callback function (passed to `startServer()`) is called when a websocket message is recieved on the server. The function takes two parameters, `ws` and `dta`.  `ws` is a reference to the open websocket. `dta` is the message recieved. `dta` will be converted to an Object if it is valid JSON; otherwise, it will be a string.
 
