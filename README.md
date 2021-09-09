@@ -46,7 +46,7 @@ Files served under the `static` directory will be served to clients when request
 
 The websocket message callback function (passed to `startServer()`) is called when a websocket message is recieved on the server. The function takes two parameters, `ws` and `dta`.  `ws` is a reference to the open websocket. `dta` is the message recieved. `dta` will be converted to an Object if it is valid JSON; otherwise, it will be a string.
 
-#### Client Websocket Usage
+### Client Websocket Usage
 
 To utilize websockets on the client, open a new websocket with, for example:
 
