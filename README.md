@@ -24,7 +24,7 @@ startServer(null, (msg, ws) => {
 
 ## Starting a Server
 
-Start a webserver with the `startServer()` function. The `startServer()` function takes an optional configuration object as well as a callback function that is called upon recieving a websocket message (see [Recieving Websocket Messages](###Recieving-Websocket-Messages-on-the-Server), below).
+Start a webserver with the `startServer()` function. The `startServer()` function takes an optional configuration object as well as a callback function that is called upon recieving a websocket message (see [Recieving Websocket Messages](#Recieving-Websocket-Messages-on-the-Server), below).
 
 ### Server Configuration
 
