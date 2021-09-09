@@ -171,7 +171,7 @@ export function startServer(config, onWebsocketMessage) {
 				response.writeHead(200, fileToContentType(fileName));
 				response.end(server.filesCache[fileName]);
 			} else {
-				logMsg('Client requested a file not in server.filesCache: "' + request.url + '" (parsed to filename: ' + fileName + ')');
+				logMsg(`Client requested a file not in server.filesCache: ${request.url} (parsed to filename: ${fileName})`);
 				response.writeHead(404, {"Content-Type": "text/plain"});
 				response.end('404 Not Found\n');	
 			}
